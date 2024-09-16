@@ -136,7 +136,7 @@ const getActiveProducts = asyncHandler(async (req, res) => {
   const activeProducts = await Product.find({ isActive: true });
 
   res.status(200).json(
-    activeProducts.map(product => ({
+    activeProducts.map((product) => ({
       _id: product._id,
       name: product.name,
       description: product.description,
@@ -175,13 +175,18 @@ const searchProductsByName = asyncHandler(async (req, res) => {
 
   try {
     const products = await Product.find({
-      name: { $regex: name, $options: 'i' }, // 'i' for case-insensitive search
+      name: { $regex: name, $options: "i" }, // 'i' for case-insensitive search
       isActive: true,
     });
 
     return res.status(200).json(products);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to search products by name', error: error.message });
+    return res
+      .status(500)
+      .json({
+        message: "Failed to search products by name",
+        error: error.message,
+      });
   }
 });
 
@@ -198,7 +203,12 @@ const searchProductsByPrice = asyncHandler(async (req, res) => {
 
     return res.status(200).json(products);
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to search products by price range', error: error.message });
+    return res
+      .status(500)
+      .json({
+        message: "Failed to search products by price range",
+        error: error.message,
+      });
   }
 });
 
@@ -211,5 +221,5 @@ module.exports = {
   getActiveProducts,
   getProductById,
   searchProductsByName,
-  searchProductsByPrice
+  searchProductsByPrice,
 };

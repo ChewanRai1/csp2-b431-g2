@@ -18,7 +18,12 @@ const passport = require("passport");
 require("./config/passport");
 // 2. Creating an express app
 const app = express();
-const PORT = 4001;
+const PORT = 4444;
+// configuration dotenv
+
+const cors = require("cors");
+
+app.use(cors());
 // configuration dotenv
 
 //connection to db
@@ -26,10 +31,10 @@ connectDB();
 
 app.use(express.json());
 //[SECTION] BAckend Routes
-app.use("/users", userRoutes);
-app.use("/products", productRoutes);
-app.use("/carts", cartRoutes);
-app.use("/orders", orderRoutes);
+app.use("/b1/users", userRoutes);
+app.use("/b1/products", productRoutes);
+app.use("/b1/carts", cartRoutes);
+app.use("/b1/orders", orderRoutes);
 
 app.use(
   session({

@@ -43,10 +43,10 @@ router.get("/active", productController.getActiveProducts);
 router.get("/:productId", productController.getProductById);
 
 // Route to search products by name
-router.post('/search-by-name', productController.searchProductsByName);
+router.post("/search-by-name", productController.searchProductsByName);
 
 // Route to search products by price range
-router.post('/search-by-price', productController.searchProductsByPrice);
+router.post("/search-by-price", productController.searchProductsByPrice);
 
 // [SECTION] Export Route System
 module.exports = router;

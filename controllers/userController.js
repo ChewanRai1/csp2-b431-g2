@@ -7,48 +7,23 @@ const nodemailer = require("nodemailer");
 // @desc    Register new user
 // @route   POST /api/register
 // @access  Public
+
 // const registerUser = asyncHandler(async (req, res) => {
 //   const { firstName, lastName, email, password, mobileNo } = req.body;
 
-//   // Validate input
 //   if (!email || !password || !firstName || !lastName) {
-//     res.status(400).json({ error: "Please add all fields" });
-//     return;
+//     return res.status(400).json({ error: "Please add all fields" });
 //   }
 
-//   // Validate email format
-//   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//   if (!emailRegex.test(email)) {
-//     res.status(400).json({ error: "Email invalid" });
-//     return;
-//   }
-
-//   // Validate mobile number
-//   const mobileRegex = /^[0-9]{10}$/;
-//   if (mobileNo && !mobileRegex.test(mobileNo)) {
-//     res.status(400).json({ error: "Mobile number invalid" });
-//     return;
-//   }
-
-//   // Validate password length
-//   if (password.length < 8) {
-//     res.status(400).json({ error: "Password must be atleast 8 characters" });
-//     return;
-//   }
-
-//   // Check if user exists
 //   const userExists = await User.findOne({ email });
 
 //   if (userExists) {
-//     res.status(400).json({ error: "User already exists" });
-//     return;
+//     return res.status(400).json({ error: "User already exists" });
 //   }
 
-//   // Hash password
 //   const salt = await bcrypt.genSalt(10);
 //   const hashedPassword = await bcrypt.hash(password, salt);
 
-//   // Create user
 //   const user = await User.create({
 //     firstName,
 //     lastName,
@@ -58,7 +33,28 @@ const nodemailer = require("nodemailer");
 //   });
 
 //   if (user) {
-//     res.status(201).json({ message: "Registered Successfully" });
+//     // Sending confirmation email
+//     const transporter = nodemailer.createTransport({
+//       service: 'Gmail',
+//       auth: {
+//         user: process.env.EMAIL_USER,
+//         pass: process.env.EMAIL_PASS,
+//       },
+//     });
+
+//     const mailOptions = {
+//       from: process.env.EMAIL_USER,
+//       to: user.email,
+//       subject: 'Registration Successful',
+//       text: `Welcome ${firstName}! Your registration is successful.`,
+//     };
+
+//     transporter.sendMail(mailOptions, (error, info) => {
+//       if (error) {
+//         return res.status(500).json({ message: 'Error sending email', error });
+//       }
+//       res.status(201).json({ message: "Registered successfully and email sent" });
+//     });
 //   } else {
 //     res.status(400).json({ error: "Invalid user data" });
 //   }
@@ -67,19 +63,34 @@ const nodemailer = require("nodemailer");
 const registerUser = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, mobileNo } = req.body;
 
-  if (!email || !password || !firstName || !lastName) {
+  // Validate fields
+  if (!email || !password || !firstName || !lastName || !mobileNo) {
     return res.status(400).json({ error: "Please add all fields" });
   }
 
-  const userExists = await User.findOne({ email });
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "Invalid email format" });
+  }
 
+  // Validate mobile number
+  const mobileRegex = /^[0-9]{10}$/;
+  if (!mobileRegex.test(mobileNo)) {
+    return res.status(400).json({ error: "Mobile number invalid" });
+  }
+
+  // Check if user exists
+  const userExists = await User.findOne({ email });
   if (userExists) {
     return res.status(400).json({ error: "User already exists" });
   }
 
+  // Hash password
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
+  // Create user
   const user = await User.create({
     firstName,
     lastName,
@@ -89,9 +100,21 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    // Sending confirmation email
+    // Respond to the client first
+    res.status(201).json({
+      message: "Registered successfully",
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        mobileNo: user.mobileNo,
+      },
+    });
+
+    // Send confirmation email asynchronously
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      service: "Gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -101,38 +124,69 @@ const registerUser = asyncHandler(async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
-      subject: 'Registration Successful',
+      subject: "Registration Successful",
       text: `Welcome ${firstName}! Your registration is successful.`,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        return res.status(500).json({ message: 'Error sending email', error });
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent successfully:", info.response);
       }
-      res.status(201).json({ message: "Registered successfully and email sent" });
     });
   } else {
     res.status(400).json({ error: "Invalid user data" });
   }
 });
-
 // @desc    Authenticate a user
 // @route   POST /api/login
 // @access  Public
+// const loginUser = asyncHandler(async (req, res) => {
+//   const { email, password } = req.body;
+
+//   // Validate input
+//   if (!email || !password) {
+//     res.status(400).json({ error: "Please add all fields" });
+//     return;
+//   }
+
+//   // Validate email format
+//   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//   if (!emailRegex.test(email)) {
+//     res.status(400).json({ error: "Invalid Email" });
+//     return;
+//   }
+
+//   const user = await User.findOne({ email });
+
+//   if (user && (await bcrypt.compare(password, user.password))) {
+//     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+//       expiresIn: "30d",
+//     });
+
+//     res.json({
+//       access: token,
+//     });
+//   } else if (!user) {
+//     res.status(404).json({ error: "No Email Found" });
+//   } else {
+//     res.status(401).json({ error: "Email and password do not match" });
+//   }
+// });
+
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   // Validate input
   if (!email || !password) {
-    res.status(400).json({ error: "Please add all fields" });
-    return;
+    return res.status(400).json({ error: "Please add all fields" });
   }
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    res.status(400).json({ error: "Invalid Email" });
-    return;
+    return res.status(400).json({ error: "Invalid Email" });
   }
 
   const user = await User.findOne({ email });
@@ -142,16 +196,24 @@ const loginUser = asyncHandler(async (req, res) => {
       expiresIn: "30d",
     });
 
-    res.json({
+    // Return both the token and the user object
+    return res.json({
       access: token,
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        mobileNo: user.mobileNo,
+        isAdmin: user.isAdmin,
+      },
     });
   } else if (!user) {
-    res.status(404).json({ error: "No Email Found" });
+    return res.status(404).json({ error: "No Email Found" });
   } else {
-    res.status(401).json({ error: "Email and password do not match" });
+    return res.status(401).json({ error: "Email and password do not match" });
   }
 });
-
 // @desc    Get user profile
 // @route   GET /api/details
 // @access  Private

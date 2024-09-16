@@ -17,7 +17,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
     const order = new Order({
       userId: req.user._id,
-      orderItems: cart.cartItems,
+      productsOrdered: cart.cartItems,
       totalPrice: cart.totalPrice,
     });
 
@@ -81,9 +81,8 @@ const getAllOrders = asyncHandler(async (req, res) => {
   }
 });
 
-
 module.exports = {
   createOrder,
   getUserOrders,
-  getAllOrders
+  getAllOrders,
 };
