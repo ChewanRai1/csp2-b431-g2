@@ -16,6 +16,9 @@ router.post("/login", userController.loginUser);
 // [SECTION] Route for retrieving user profile
 router.get("/details", protect, userController.getUserProfile);
 
+// Route to update user profile
+router.patch("/update-profile", protect, userController.updateUserProfile);
+
 // [SECTION] Route for updating user to admin
 router.patch(
   "/:id/set-as-admin",

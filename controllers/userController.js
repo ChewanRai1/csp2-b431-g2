@@ -236,6 +236,37 @@ const getUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    const { firstName, lastName, email, mobileNo } = req.body;
+
+    // Update the user's details
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    user.mobileNo = mobileNo || user.mobileNo;
+
+    const updatedUser = await user.save();
+
+    // Respond with updated user details
+    res.json({
+      user: {
+        _id: updatedUser._id,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        email: updatedUser.email,
+        mobileNo: updatedUser.mobileNo,
+        isAdmin: updatedUser.isAdmin,
+      },
+      message: "Profile updated successfully",
+    });
+  } else {
+    res.status(404).json({ error: "User not found" });
+  }
+});
+
 // @desc    Update user to admin
 // @route   PATCH /api/:id/set-as-admin
 // @access  Private/Admin
@@ -358,6 +389,7 @@ module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
+  updateUserProfile,
   updateUserAsAdmin,
   updateUserPassword,
 };
