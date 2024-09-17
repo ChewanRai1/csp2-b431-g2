@@ -6,6 +6,10 @@ const Cart = require("../models/Cart");
 // @route   POST /orders/checkout
 // @access  Private
 const createOrder = asyncHandler(async (req, res) => {
+  // Restrict admin users from creating an order
+  if (req.user.isAdmin) {
+    return res.status(403).json({ message: "Admins cannot place orders." });
+  }
   try {
     const cart = await Cart.findOne({ userId: req.user._id }).populate(
       "cartItems.productId"
@@ -14,10 +18,17 @@ const createOrder = asyncHandler(async (req, res) => {
     if (!cart || cart.cartItems.length === 0) {
       return res.status(400).json({ error: "No Items to Checkout" });
     }
+    const productsOrdered = cart.cartItems.map((item) => ({
+      productId: item.productId._id, // Only productId saved
+      name: item.productId.name, // Save product name
+      price: item.productId.price, // Save product price
+      quantity: item.quantity, // Save quantity ordered
+      subtotal: item.subtotal, // Save subtotal
+    }));
 
     const order = new Order({
       userId: req.user._id,
-      productsOrdered: cart.cartItems,
+      productsOrdered, // Saving the processed product data
       totalPrice: cart.totalPrice,
     });
 
